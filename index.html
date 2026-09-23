@@ -133,27 +133,40 @@ button { cursor: pointer; }
 }
 
 /* =========================================================
-   4. Layout: sidebar form + board
+   4. Layout: sticky top bar (header + filters) over a full-width board
    ========================================================= */
-.layout {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: var(--space-5);
-  padding: var(--space-5);
-  align-items: start;
+.topbar {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  background: var(--c-bg);
+  box-shadow: 0 2px 6px rgba(16, 32, 64, .08);
 }
-@media (max-width: 1200px) {
-  .layout { grid-template-columns: minmax(0, 1fr); }
-}
+.layout { padding: var(--space-4) var(--space-5) var(--space-5); }
 
-.panel {
-  background: var(--c-surface);
+/* =========================================================
+   4b. Add Task modal
+   ========================================================= */
+.task-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  padding: var(--space-4);
+  background: var(--c-surface);
+  color: var(--c-text);
+  box-shadow: var(--shadow-lg);
 }
-.panel h2 { font-size: 16px; margin-bottom: var(--space-3); color: var(--c-primary); }
+.task-dialog::backdrop { background: rgba(8, 20, 45, .55); }
+.dialog-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--c-border);
+  position: sticky; top: 0; background: var(--c-surface); z-index: 1;
+}
+.dialog-head h2 { font-size: 17px; color: var(--c-primary); }
+.task-dialog form { padding: var(--space-4); }
+.dialog-close:hover { background: var(--c-surface-alt); color: var(--c-text); }
 
 /* =========================================================
    5. Add Task form
@@ -181,12 +194,20 @@ button { cursor: pointer; }
    6. Filter bar
    ========================================================= */
 .filters {
-  display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2) var(--space-3);
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
 }
-.filters .field { margin: 0; min-width: 170px; flex: 1 1 170px; }
-.filters .btn { flex: 0 0 auto; }
+.filters .field { margin: 0; min-width: 150px; flex: 1 1 150px; }
+.filters .field-search { flex: 2 1 220px; }
+.filters .field label { font-size: 12px; }
+.filters .field input, .filters .field select { padding: 6px var(--space-2); }
+.filter-actions { display: flex; gap: var(--space-2); flex: 0 0 auto; }
+.filter-actions .btn { padding: 6px var(--space-3); }
 .filter-status { width: 100%; margin: 0; font-size: 12.5px; color: var(--c-muted); }
+.filter-status:empty { display: none; }
 
 /* =========================================================
    7. Board + columns
@@ -197,10 +218,20 @@ button { cursor: pointer; }
   gap: var(--space-4);
   align-items: start;
 }
+/* Desktop: each column scrolls on its own so all four headers stay in view */
+@media (min-width: 768px) {
+  .card-list {
+    max-height: max(240px, calc(100vh - var(--topbar-h, 220px) - 150px));
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+}
+/* Phones: one stacked column, top bar scrolls away to free screen space */
 @media (max-width: 767px) {
   .board { grid-template-columns: minmax(0, 1fr); }
-  .layout { padding: var(--space-3); }
-  .app-header, .demo-note { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .topbar { position: static; }
+  .layout { padding: var(--space-3) var(--space-4); }
+  .app-header, .demo-note, .filters { padding-left: var(--space-4); padding-right: var(--space-4); }
   .field-row { grid-template-columns: 1fr; }
 }
 
@@ -265,7 +296,15 @@ button { cursor: pointer; }
 .card-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px var(--space-2); font-size: 12.5px; }
 .card-meta dt { color: var(--c-muted); }
 .card-meta dd { margin: 0; word-break: break-word; }
-.card-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
+.card-id-row { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.card-line { margin: 0; display: flex; flex-wrap: wrap; gap: 2px var(--space-3); font-size: 12.5px; color: var(--c-muted); }
+.card-line strong { color: var(--c-text); font-weight: 600; }
+.card-details {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--c-border);
+}
+.card-details .card-desc { margin-top: var(--space-2); margin-bottom: 0; }
 
 .pill, .tag, .overdue {
   display: inline-block; font-size: 11px; font-weight: 700;
@@ -341,115 +380,134 @@ button { cursor: pointer; }
 <body>
 
 <!-- =========================================================
-     Header: wordmark, Add Task shortcut, live summary strip
+     Sticky top bar: header, demo note and filter bar
      ========================================================= -->
-<header class="app-header">
-  <div class="header-top">
-    <div class="wordmark">
-      <span class="wordmark-name">UOB IT PMO</span>
-      <span class="wordmark-sub">Project Kanban · internal demo / training tool</span>
+<div class="topbar" id="topbar">
+  <header class="app-header">
+    <div class="header-top">
+      <div class="wordmark">
+        <span class="wordmark-name">UOB IT PMO</span>
+        <span class="wordmark-sub">Project Kanban · internal demo / training tool</span>
+      </div>
+      <button type="button" class="btn btn-light" id="add-task-btn" aria-haspopup="dialog">+ Add Task</button>
     </div>
-    <button type="button" class="btn btn-light" id="add-task-btn">+ Add Task</button>
-  </div>
-  <ul class="summary" id="summary" aria-label="Board summary"></ul>
-</header>
-<p class="demo-note">
-  <span aria-hidden="true">ⓘ</span> Demo mode: the board is held in memory only. Refreshing the page resets it to the seeded demo data.
-</p>
+    <ul class="summary" id="summary" aria-label="Board summary"></ul>
+  </header>
+  <p class="demo-note">
+    <span aria-hidden="true">ⓘ</span> Demo mode: the board is held in memory only. Refreshing the page resets it to the seeded demo data.
+  </p>
 
+  <form class="filters" id="filter-form" role="search" aria-label="Search and filter tasks">
+    <div class="field field-search">
+      <label for="filter-search">Search</label>
+      <input id="filter-search" type="search" placeholder="Title, task ID or description">
+    </div>
+    <div class="field">
+      <label for="filter-project">Project</label>
+      <select id="filter-project"></select>
+    </div>
+    <div class="field">
+      <label for="filter-assignee">Assignee contains</label>
+      <input id="filter-assignee" type="text" placeholder="e.g. Tan">
+    </div>
+    <div class="field">
+      <label for="filter-priority">Priority</label>
+      <select id="filter-priority"></select>
+    </div>
+    <div class="field">
+      <label for="filter-sort">Sort cards by</label>
+      <select id="filter-sort">
+        <option value="">Date added</option>
+        <option value="due">Due date (soonest first)</option>
+        <option value="priority">Priority (Critical first)</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button type="reset" class="btn btn-ghost">Clear</button>
+      <button type="button" class="btn btn-ghost" id="export-csv-btn">↓ Export CSV</button>
+    </div>
+    <p class="filter-status" id="filter-status" aria-live="polite"></p>
+  </form>
+</div>
+
+<!-- =========================================================
+     Kanban board
+     ========================================================= -->
 <main class="layout">
-
-  <!-- =========================================================
-       Add Task form (sidebar panel)
-       ========================================================= -->
-  <section class="panel" aria-labelledby="form-heading">
-    <h2 id="form-heading">Add Task</h2>
-    <form id="task-form" novalidate>
-      <div class="field">
-        <label for="f-title">Task Title <span class="req" aria-hidden="true">*</span></label>
-        <input id="f-title" name="title" type="text" maxlength="80" required aria-describedby="err-title">
-        <p class="field-error" id="err-title"></p>
-      </div>
-
-      <div class="field">
-        <label for="f-description">Description</label>
-        <textarea id="f-description" name="description" maxlength="500" rows="3" aria-describedby="hint-description err-description"></textarea>
-        <div class="field-hint" id="hint-description">Optional, up to 500 characters.</div>
-        <p class="field-error" id="err-description"></p>
-      </div>
-
-      <div class="field">
-        <label for="f-project">Project / Workstream</label>
-        <select id="f-project" name="project" aria-describedby="err-project"></select>
-        <p class="field-error" id="err-project"></p>
-      </div>
-
-      <div class="field">
-        <label for="f-category">Category</label>
-        <select id="f-category" name="category" aria-describedby="err-category"></select>
-        <p class="field-error" id="err-category"></p>
-      </div>
-
-      <div class="field">
-        <label for="f-assignee">Assignee <span class="req" aria-hidden="true">*</span></label>
-        <input id="f-assignee" name="assignee" type="text" maxlength="60" required aria-describedby="err-assignee">
-        <p class="field-error" id="err-assignee"></p>
-      </div>
-
-      <div class="field-row">
-        <div class="field">
-          <label for="f-priority">Priority</label>
-          <select id="f-priority" name="priority" aria-describedby="err-priority"></select>
-          <p class="field-error" id="err-priority"></p>
-        </div>
-        <div class="field">
-          <label for="f-status">Status</label>
-          <select id="f-status" name="status" aria-describedby="err-status"></select>
-          <p class="field-error" id="err-status"></p>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="f-dueDate">Due Date <span class="req" aria-hidden="true">*</span></label>
-        <input id="f-dueDate" name="dueDate" type="date" required aria-describedby="err-dueDate">
-        <p class="field-error" id="err-dueDate"></p>
-      </div>
-
-      <p class="field-hint"><span class="req" aria-hidden="true">*</span> Required field</p>
-
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary" id="submit-btn">Add Task</button>
-        <button type="reset" class="btn btn-ghost">Clear</button>
-      </div>
-    </form>
-  </section>
-
-  <!-- =========================================================
-       Filter bar + Kanban board
-       ========================================================= -->
   <section aria-labelledby="board-heading">
     <h2 id="board-heading" class="visually-hidden">Kanban board</h2>
-
-    <form class="panel filters" id="filter-form" role="search" aria-label="Filter tasks">
-      <div class="field">
-        <label for="filter-project">Project</label>
-        <select id="filter-project"></select>
-      </div>
-      <div class="field">
-        <label for="filter-assignee">Assignee contains</label>
-        <input id="filter-assignee" type="text" placeholder="e.g. Tan">
-      </div>
-      <div class="field">
-        <label for="filter-priority">Priority</label>
-        <select id="filter-priority"></select>
-      </div>
-      <button type="reset" class="btn btn-ghost">Clear filters</button>
-      <p class="filter-status" id="filter-status" aria-live="polite"></p>
-    </form>
-
     <div class="board" id="board"></div>
   </section>
 </main>
+
+<!-- =========================================================
+     Add Task modal (native <dialog>: focus trap + Esc to close)
+     ========================================================= -->
+<dialog class="task-dialog" id="task-dialog" aria-labelledby="form-heading">
+  <div class="dialog-head">
+    <h2 id="form-heading">Add Task</h2>
+    <button type="button" class="icon-btn dialog-close" data-close-dialog aria-label="Close Add Task form">×</button>
+  </div>
+  <form id="task-form" novalidate>
+        <div class="field">
+          <label for="f-title">Task Title <span class="req" aria-hidden="true">*</span></label>
+          <input id="f-title" name="title" type="text" maxlength="80" required aria-describedby="err-title">
+          <p class="field-error" id="err-title"></p>
+        </div>
+
+        <div class="field">
+          <label for="f-description">Description</label>
+          <textarea id="f-description" name="description" maxlength="500" rows="3" aria-describedby="hint-description err-description"></textarea>
+          <div class="field-hint" id="hint-description">Optional, up to 500 characters.</div>
+          <p class="field-error" id="err-description"></p>
+        </div>
+
+        <div class="field">
+          <label for="f-project">Project / Workstream</label>
+          <select id="f-project" name="project" aria-describedby="err-project"></select>
+          <p class="field-error" id="err-project"></p>
+        </div>
+
+        <div class="field">
+          <label for="f-category">Category</label>
+          <select id="f-category" name="category" aria-describedby="err-category"></select>
+          <p class="field-error" id="err-category"></p>
+        </div>
+
+        <div class="field">
+          <label for="f-assignee">Assignee <span class="req" aria-hidden="true">*</span></label>
+          <input id="f-assignee" name="assignee" type="text" maxlength="60" required aria-describedby="err-assignee">
+          <p class="field-error" id="err-assignee"></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="f-priority">Priority</label>
+            <select id="f-priority" name="priority" aria-describedby="err-priority"></select>
+            <p class="field-error" id="err-priority"></p>
+          </div>
+          <div class="field">
+            <label for="f-status">Status</label>
+            <select id="f-status" name="status" aria-describedby="err-status"></select>
+            <p class="field-error" id="err-status"></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-dueDate">Due Date <span class="req" aria-hidden="true">*</span></label>
+          <input id="f-dueDate" name="dueDate" type="date" required aria-describedby="err-dueDate">
+          <p class="field-error" id="err-dueDate"></p>
+        </div>
+
+        <p class="field-hint"><span class="req" aria-hidden="true">*</span> Required field</p>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="submit-btn">Add Task</button>
+          <button type="reset" class="btn btn-ghost">Clear</button>
+          <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+        </div>
+      </form>
+</dialog>
 
 <!-- Toast region: announced politely to screen readers -->
 <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="false"></div>
@@ -492,10 +550,10 @@ const PRIORITIES = ["Critical", "High", "Medium", "Low"];
    ========================================================= */
 const state = {
   tasks: [],
-  filters: { project: "", assignee: "", priority: "" },
+  filters: { search: "", project: "", assignee: "", priority: "", sort: "" },
   nextId: 1,
   // Transient UI state for per-card inline controls
-  ui: { moveMenuId: null, confirmDeleteId: null, focus: null, submitting: false },
+  ui: { moveMenuId: null, confirmDeleteId: null, expanded: new Set(), focus: null, submitting: false },
 };
 
 /* =========================================================
@@ -582,19 +640,29 @@ function deleteTask(id) {
   const idx = state.tasks.findIndex(t => t.id === id);
   if (idx === -1) return;
   const [removed] = state.tasks.splice(idx, 1);
+  state.ui.expanded.delete(removed.id);
   state.ui.confirmDeleteId = null;
   renderBoard();
   showToast(`${removed.id} deleted`, "info");
 }
 
+const PRIORITY_RANK = Object.fromEntries(PRIORITIES.map((p, i) => [p, i]));
+
+// Filter by search/project/assignee/priority, then sort (array order = date added)
 function applyFilters(tasks) {
-  const { project, assignee, priority } = state.filters;
+  const { search, project, assignee, priority, sort } = state.filters;
   const needle = assignee.trim().toLowerCase();
-  return tasks.filter(t =>
+  const query = search.trim().toLowerCase();
+  const visible = tasks.filter(t =>
     (!project || t.project === project) &&
     (!priority || t.priority === priority) &&
-    (!needle || t.assignee.toLowerCase().includes(needle))
+    (!needle || t.assignee.toLowerCase().includes(needle)) &&
+    (!query || [t.id, t.title, t.description].some(v => v.toLowerCase().includes(query)))
   );
+  const byDue = (a, b) => a.dueDate.localeCompare(b.dueDate);
+  if (sort === "due") visible.sort(byDue);
+  if (sort === "priority") visible.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || byDue(a, b));
+  return visible;
 }
 
 /* =========================================================
@@ -622,26 +690,37 @@ function renderCard(task) {
       <button type="button" class="mini-btn" data-action="delete-no" data-id="${id}">No</button>
     </div>` : "";
 
+  const expanded = state.ui.expanded.has(task.id);
+  const details = expanded ? `
+        <div class="card-details" id="details-${id}">
+          <dl class="card-meta">
+            <dt>Project</dt><dd>${escapeHtml(task.project)}</dd>
+            <dt>Category</dt><dd><span class="tag">${escapeHtml(task.category)}</span></dd>
+            <dt>Status</dt><dd>${escapeHtml(task.status)}</dd>
+          </dl>
+          <p class="card-desc">${task.description ? escapeHtml(task.description) : "<em>No description.</em>"}</p>
+        </div>` : "";
+
   return `
     <li class="card" draggable="true" data-id="${id}" data-priority="${escapeHtml(task.priority)}">
       <article aria-labelledby="title-${id}">
         <div class="card-top">
-          <span class="card-id">${id}</span>
+          <span class="card-id-row">
+            <span class="card-id">${id}</span>
+            <span class="pill pill-${escapeHtml(task.priority)}">${escapeHtml(task.priority)}<span class="visually-hidden"> priority</span></span>
+            ${overdue ? `<span class="overdue">⚠ Overdue</span>` : ""}
+          </span>
           <button type="button" class="icon-btn" data-action="delete" data-id="${id}" aria-label="Delete task ${id}">×</button>
         </div>
         <h3 class="card-title" id="title-${id}">${escapeHtml(task.title)}</h3>
-        ${task.description ? `<p class="card-desc">${escapeHtml(task.description)}</p>` : ""}
-        <dl class="card-meta">
-          <dt>Project</dt><dd>${escapeHtml(task.project)}</dd>
-          <dt>Assignee</dt><dd>${escapeHtml(task.assignee)}</dd>
-          <dt>Due</dt><dd><time datetime="${escapeHtml(task.dueDate)}">${escapeHtml(formatDate(task.dueDate))}</time></dd>
-        </dl>
-        <div class="card-tags">
-          <span class="pill pill-${escapeHtml(task.priority)}">${escapeHtml(task.priority)}<span class="visually-hidden"> priority</span></span>
-          <span class="tag">${escapeHtml(task.category)}</span>
-          ${overdue ? `<span class="overdue">⚠ Overdue</span>` : ""}
-        </div>
+        <p class="card-line">
+          <span><span class="visually-hidden">Assignee: </span><strong>${escapeHtml(task.assignee)}</strong></span>
+          <span>Due <time datetime="${escapeHtml(task.dueDate)}">${escapeHtml(formatDate(task.dueDate))}</time></span>
+        </p>
+        ${details}
         <div class="card-actions">
+          <button type="button" class="mini-btn" data-action="details-toggle" data-id="${id}"
+            aria-expanded="${expanded}" aria-label="${expanded ? "Hide" : "Show"} details for ${id}">${expanded ? "Details ▴" : "Details ▾"}</button>
           <button type="button" class="mini-btn" data-action="move-toggle" data-id="${id}"
             aria-expanded="${moveOpen}" aria-label="Move task ${id} to another column">Move ▸</button>
           ${moveMenu}
@@ -683,7 +762,7 @@ function renderSummary() {
 
 function hasActiveFilters() {
   const f = state.filters;
-  return Boolean(f.project || f.priority || f.assignee.trim());
+  return Boolean(f.project || f.priority || f.assignee.trim() || f.search.trim());
 }
 
 function renderBoard() {
@@ -842,6 +921,7 @@ async function handleSubmit(e) {
   // Optimistic UI: card appears immediately, notification runs in parallel
   const task = addTask(values);
   resetTaskForm(form);
+  document.getElementById("task-dialog").close();
   showToast(`Task ${task.id} added to ${task.status}`, "success");
 
   setSubmitting(true);
@@ -864,6 +944,12 @@ function handleBoardClick(e) {
   const { action, id, status } = btn.dataset;
 
   switch (action) {
+    case "details-toggle":
+      if (state.ui.expanded.has(id)) state.ui.expanded.delete(id);
+      else state.ui.expanded.add(id);
+      state.ui.focus = { action: "details-toggle", id };
+      renderBoard();
+      break;
     case "move-toggle": {
       const opening = state.ui.moveMenuId !== id;
       state.ui.moveMenuId = opening ? id : null;
@@ -960,26 +1046,67 @@ function initDragAndDrop(board) {
 }
 
 /* =========================================================
+   CSV export (downloads the tasks currently shown on the board)
+   ========================================================= */
+function csvCell(value) {
+  let v = String(value ?? "");
+  // Stop spreadsheet apps treating text as a formula
+  if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;
+  return `"${v.replace(/"/g, '""')}"`;
+}
+
+function exportCsv() {
+  const tasks = applyFilters(state.tasks);
+  if (!tasks.length) {
+    showToast("No tasks to export — clear the filters and try again", "warning");
+    return;
+  }
+  const header = ["Task ID", "Title", "Description", "Project", "Category", "Assignee", "Priority", "Status", "Due Date", "Overdue"];
+  const rows = tasks.map(t => [
+    t.id, t.title, t.description, t.project, t.category, t.assignee,
+    t.priority, t.status, t.dueDate, isOverdue(t) ? "Yes" : "No",
+  ]);
+  const csv = [header, ...rows].map(r => r.map(csvCell).join(",")).join("\r\n");
+  // BOM so Excel opens the file as UTF-8
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `uob-it-pmo-board-${todayIso()}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`Exported ${tasks.length} task${tasks.length === 1 ? "" : "s"} to CSV`, "success");
+}
+
+/* =========================================================
    Filters
    ========================================================= */
 function initFilters() {
+  const search = document.getElementById("filter-search");
   const project = document.getElementById("filter-project");
   const assignee = document.getElementById("filter-assignee");
   const priority = document.getElementById("filter-priority");
+  const sort = document.getElementById("filter-sort");
   project.innerHTML = optionsHtml(PROJECTS, "", "All projects");
   priority.innerHTML = optionsHtml(PRIORITIES, "", "All priorities");
 
   const sync = () => {
-    state.filters = { project: project.value, assignee: assignee.value, priority: priority.value };
+    state.filters = {
+      search: search.value, project: project.value, assignee: assignee.value,
+      priority: priority.value, sort: sort.value,
+    };
     renderBoard();
   };
-  project.addEventListener("change", sync);
-  priority.addEventListener("change", sync);
-  assignee.addEventListener("input", sync);
+  [project, priority, sort].forEach(el => el.addEventListener("change", sync));
+  [search, assignee].forEach(el => el.addEventListener("input", sync));
 
   const form = document.getElementById("filter-form");
   form.addEventListener("submit", e => e.preventDefault());
   form.addEventListener("reset", () => setTimeout(sync, 0)); // run after fields reset
+
+  document.getElementById("export-csv-btn").addEventListener("click", exportCsv);
 }
 
 /* =========================================================
@@ -1003,19 +1130,40 @@ function initForm() {
   form.addEventListener("input", e => { if (e.target.name) clearFieldError(e.target.name); });
   form.addEventListener("change", e => { if (e.target.name) clearFieldError(e.target.name); });
 
+  const dialog = document.getElementById("task-dialog");
   const addBtn = document.getElementById("add-task-btn");
   addBtn.dataset.action = "add-task";
-  addBtn.addEventListener("click", () => {
-    const title = document.getElementById("f-title");
-    title.scrollIntoView({ behavior: "smooth", block: "center" });
-    title.focus({ preventScroll: true });
-  });
+  addBtn.addEventListener("click", openTaskDialog);
+  dialog.querySelectorAll("[data-close-dialog]").forEach(btn =>
+    btn.addEventListener("click", () => dialog.close())
+  );
+  // Click on the dimmed backdrop closes the modal
+  dialog.addEventListener("click", e => { if (e.target === dialog) dialog.close(); });
+  // Keep any typed draft, but drop stale error messages
+  dialog.addEventListener("close", () => showFieldErrors({}));
+}
+
+function openTaskDialog() {
+  const dialog = document.getElementById("task-dialog");
+  document.getElementById("f-dueDate").min = todayIso();
+  if (!dialog.open) dialog.showModal();
+  document.getElementById("f-title").focus();
+}
+
+// Expose the sticky top bar's height to CSS so columns can size their scroll area
+function trackTopbarHeight() {
+  const topbar = document.getElementById("topbar");
+  const update = () => document.documentElement.style.setProperty("--topbar-h", `${topbar.offsetHeight}px`);
+  update();
+  if ("ResizeObserver" in window) new ResizeObserver(update).observe(topbar);
+  else window.addEventListener("resize", update);
 }
 
 function init() {
   seedTasks();
   initForm();
   initFilters();
+  trackTopbarHeight();
   const board = document.getElementById("board");
   board.addEventListener("click", handleBoardClick);
   board.addEventListener("keydown", handleBoardKeydown);

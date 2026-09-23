@@ -19,14 +19,17 @@ Run it by opening `index.html` directly in a browser (`open index.html`). A serv
 
 ## Script architecture
 
-- **One source of truth:** `state = { tasks, filters, nextId, ui }`. The `ui` part holds per-card transient state (`moveMenuId`, `confirmDeleteId`), a pending `focus` target and `submitting`.
+- **One source of truth:** `state = { tasks, filters, nextId, ui }`. `filters` holds `search`, `project`, `assignee`, `priority` and `sort`. The `ui` part holds per-card transient state (`moveMenuId`, `confirmDeleteId`, and an `expanded` Set of cards showing details), a pending `focus` target and `submitting`.
 - **Always re-render from state.** Data operations (`addTask`, `moveTask`, `deleteTask`) change `state`, then call `renderBoard()`. It rebuilds every column's HTML from `applyFilters(state.tasks)` via `renderColumn()` and `renderCard()`, then calls `renderSummary()` and `restoreFocus()`. Don't change card DOM anywhere else.
 - **Focus after re-render:** handlers set `state.ui.focus = { action, id }`. `restoreFocus()` then focuses the matching `[data-action][data-id]` element, which keeps keyboard users in place after a re-render.
-- **Board events use delegation.** One click handler on `#board` switches on `data-action` (`move-toggle`, `move-to`, `move-cancel`, `delete`, `delete-yes`, `delete-no`). Escape closes any open inline menu. Native HTML5 drag-and-drop listeners are also on `#board`, and dropping a card calls `moveTask`.
+- **Board events use delegation.** One click handler on `#board` switches on `data-action` (`details-toggle`, `move-toggle`, `move-to`, `move-cancel`, `delete`, `delete-yes`, `delete-no`). Escape closes any open inline menu. Native HTML5 drag-and-drop listeners are also on `#board`, and dropping a card calls `moveTask`.
 - **Escaping:** every user-supplied string goes through `escapeHtml()` before it is placed in template-literal HTML, including values inside attributes.
 - **Dates** are local `YYYY-MM-DD` strings, compared as text against `todayIso()`. Seed tasks use `daysFromToday(n)`, so overdue examples stay overdue whatever day it is. A task is overdue when its due date is before today and its status isn't Done.
 - **Task IDs** look like `UOB-ITPM-####` and come from `generateId()` (`state.nextId`). The 8 seed tasks use 0001–0008.
 - **The Add Task flow is optimistic.** `handleSubmit` validates the form (`validateTask` → `showFieldErrors`), adds the card, resets the form and shows a success toast. It then awaits `notifyNewTask()` while the submit button shows "Sending…". If that fails, only a warning toast appears ("Card added locally — email notification failed"). A FormSubmit failure must never break the board.
+- **Filtering and sorting** both happen in `applyFilters()`. Search matches ID, title and description. Sort is by date added (array order), due date, or priority then due date. `exportCsv()` downloads the same filtered and sorted list, with formula-injection guarding in `csvCell()` and a UTF-8 BOM for Excel.
+- **Layout:** a sticky `.topbar` holds the header, demo note and filter bar. `trackTopbarHeight()` writes its height to `--topbar-h`, which each column's `.card-list` uses to scroll on its own at 768px and wider. Below 768px the top bar isn't sticky and columns stack. Cards are compact (ID, priority, overdue, title, assignee, due date), and project, category, status and description show under "Details ▾".
+- **Add Task is a native `<dialog>`** opened by `openTaskDialog()`. It closes on submit, Cancel, ×, Esc or a backdrop click. Closing keeps the typed draft but clears error messages.
 - **Reference lists** (`STATUSES`, `PROJECTS`, `CATEGORIES`, `PRIORITIES`) sit at the top of the script. The form selects, filter selects and columns are all generated from these lists.
 
 ## FormSubmit config
