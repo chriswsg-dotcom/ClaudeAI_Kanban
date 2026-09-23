@@ -32,6 +32,12 @@
   --c-low-soft: #eef0f3;
 
   --c-success: #1b7f3b;
+
+  /* Status colour code (validated for colour-blind separation; always paired with labels) */
+  --s-done: #1baf7a;
+  --s-progress: #2a78d6;
+  --s-blocked: #eb6834;
+  --s-backlog: #4a3aa7;
   --c-warning: #8a5300;
   --c-warning-soft: #fff4e0;
 
@@ -168,6 +174,56 @@ button { cursor: pointer; }
 .task-dialog form { padding: var(--space-4); }
 .dialog-close:hover { background: var(--c-surface-alt); color: var(--c-text); }
 
+/* Header actions */
+.header-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.btn-outline-light { background: transparent; color: #ffffff; border-color: rgba(255, 255, 255, .6); }
+.btn-outline-light:hover { background: rgba(255, 255, 255, .12); }
+
+/* "Today's focus" pop-up */
+.focus-dialog { width: min(600px, calc(100vw - 32px)); }
+.focus-body { padding: var(--space-4); display: grid; gap: var(--space-4); }
+.focus-section h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--c-muted); margin-bottom: var(--space-2); }
+.focus-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.focus-item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--c-border);
+  border-left: 5px solid var(--prio, var(--c-low));
+  border-radius: var(--radius);
+  background: var(--c-surface);
+}
+.focus-item[data-priority="Critical"] { --prio: var(--c-critical); }
+.focus-item[data-priority="High"]     { --prio: var(--c-high); }
+.focus-item[data-priority="Medium"]   { --prio: var(--c-medium); }
+.focus-item[data-priority="Low"]      { --prio: var(--c-low); }
+.focus-title { font-weight: 700; margin: 2px 0; word-break: break-word; }
+.focus-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); font-size: 12px; color: var(--c-muted); }
+.focus-why { font-size: 12px; color: var(--c-text); }
+.visitor-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.visitor-row label { font-weight: 600; }
+.visitor-row select { padding: 6px var(--space-2); border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--c-surface); min-width: 200px; }
+.visitor-result { margin-top: var(--space-3); display: grid; gap: var(--space-2); }
+.visitor-verdict { margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius); font-weight: 600; }
+.visitor-verdict.is-bad  { background: var(--c-critical-soft); color: var(--c-critical); border: 1px solid var(--c-critical-border, #f3b9b9); }
+.visitor-verdict.is-good { background: #e7f6ee; color: var(--c-success); border: 1px solid #b7e2c7; }
+.card.is-highlight { box-shadow: 0 0 0 3px var(--c-focus), var(--shadow); }
+
+/* Support pop-up */
+.help-dialog { width: min(420px, calc(100vw - 32px)); }
+.help-body { padding: var(--space-4); display: grid; gap: var(--space-3); }
+.help-body p { margin: 0; }
+.hotline {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  background: var(--c-primary-soft);
+  color: var(--c-primary); text-decoration: none;
+}
+.hotline:hover { background: var(--c-surface-alt); }
+.hotline-icon { font-size: 22px; line-height: 1; }
+.hotline-label { display: block; font-size: 12px; color: var(--c-muted); }
+.hotline-number { display: block; font-size: 22px; font-weight: 800; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+
 /* =========================================================
    5. Add Task form
    ========================================================= */
@@ -251,24 +307,116 @@ button { cursor: pointer; }
 .column-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 3px solid var(--col-accent, var(--c-primary));
 }
-.column[data-status="Backlog"]     { --col-accent: #6b7a90; }
-.column[data-status="In Progress"] { --col-accent: var(--c-medium); }
-.column[data-status="Blocked"]     { --col-accent: var(--c-critical); }
-.column[data-status="Done"]        { --col-accent: var(--c-success); }
+.column[data-status="Backlog"]     { --col-accent: var(--s-backlog); }
+.column[data-status="In Progress"] { --col-accent: var(--s-progress); }
+.column[data-status="Blocked"]     { --col-accent: var(--s-blocked); }
+.column[data-status="Done"]        { --col-accent: var(--s-done); }
+.column { border-top: 4px solid var(--col-accent); }
 .column-header h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .05em; }
 .column-desc { font-size: 11.5px; color: var(--c-muted); margin: -6px 0 var(--space-3); }
 .count-badge {
-  min-width: 26px; text-align: center;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-width: 26px;
   padding: 1px var(--space-2);
   border-radius: 999px;
-  background: var(--col-accent, var(--c-primary));
-  color: #fff; font-weight: 700; font-size: 12px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text); font-weight: 700; font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
+.count-badge::before, .dot {
+  content: ""; display: inline-block; flex: none;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--col-accent, var(--dot, var(--c-primary)));
+}
+.dot-done     { --dot: var(--s-done); }
+.dot-progress { --dot: var(--s-progress); }
+.dot-blocked  { --dot: var(--s-blocked); }
+.dot-backlog  { --dot: var(--s-backlog); }
+.summary .dot { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .85); align-self: center; }
 .card-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); min-height: 40px; }
 .empty-col { font-size: 12.5px; color: var(--c-muted); text-align: center; padding: var(--space-4) var(--space-2); border: 1px dashed var(--c-border); border-radius: var(--radius); }
+
+/* =========================================================
+   7b. Portfolio overview (live charts)
+   ========================================================= */
+.insights {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.insights-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
+.insights-head h2 { font-size: 16px; color: var(--c-primary); }
+.insights-scope { margin: 0; font-size: 12.5px; color: var(--c-muted); flex: 1 1 auto; }
+.insights-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: 13px; }
+.insights-controls label { font-weight: 600; color: var(--c-muted); }
+.insights-controls select { padding: 4px var(--space-2); border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--c-surface); }
+.insights-body {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+}
+@media (max-width: 900px) { .insights-body { grid-template-columns: minmax(0, 1fr); } }
+
+/* Completion ring + status legend */
+.completion { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+.ring { position: relative; width: 148px; height: 148px; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: var(--c-surface-alt); stroke-width: 14; }
+.ring-value { fill: none; stroke: var(--s-done); stroke-width: 14; stroke-linecap: round; transition: stroke-dasharray .4s ease; }
+.ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.ring-pct { font-size: 30px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.ring-sub { font-size: 12px; color: var(--c-muted); margin-top: 4px; }
+.legend { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; gap: 6px; }
+.legend li { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: var(--space-2); font-size: 13px; }
+.legend .n { font-weight: 700; font-variant-numeric: tabular-nums; }
+.legend .p { color: var(--c-muted); font-size: 12px; min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Grouped stacked bars */
+.bars { display: grid; gap: 10px; align-content: start; }
+.bars-caption { margin: 0 0 2px; font-size: 12px; color: var(--c-muted); }
+.bar-row { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr) 118px; align-items: center; gap: var(--space-3); font-size: 13px; }
+.bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.bar-track { height: 18px; background-image: linear-gradient(to right, var(--c-border) 1px, transparent 1px); background-size: 25% 100%; }
+.bar { display: flex; gap: 2px; height: 100%; min-width: 0; }
+.seg { flex: var(--n) 1 0; min-width: 4px; height: 100%; background: var(--seg); cursor: default; }
+.seg:first-child { border-radius: 4px 0 0 4px; }
+.seg:last-child { border-radius: 0 4px 4px 0; }
+.seg:only-child { border-radius: 4px; }
+.seg:hover { filter: brightness(1.12); outline: 2px solid var(--c-text); outline-offset: 1px; }
+.seg-done     { --seg: var(--s-done); }
+.seg-progress { --seg: var(--s-progress); }
+.seg-blocked  { --seg: var(--s-blocked); }
+.seg-backlog  { --seg: var(--s-backlog); }
+.bar-value { font-size: 12px; color: var(--c-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bar-value strong { color: var(--c-text); }
+.mini-progress { display: inline-block; width: 34px; height: 5px; margin-left: 6px; vertical-align: middle; border-radius: 3px; background: var(--c-surface-alt); overflow: hidden; }
+.mini-progress i { display: block; height: 100%; background: var(--s-done); }
+@media (max-width: 560px) {
+  .bar-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .bar-track { grid-column: 1 / -1; grid-row: 2; }
+}
+
+/* Table view */
+.chart-table-wrap { overflow-x: auto; }
+.chart-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.chart-table th, .chart-table td { padding: 6px var(--space-2); border-bottom: 1px solid var(--c-border); text-align: right; white-space: nowrap; }
+.chart-table th:first-child, .chart-table td:first-child { text-align: left; }
+.chart-table thead th { font-size: 12px; color: var(--c-muted); }
+.chart-table tfoot td { font-weight: 700; border-bottom: 0; }
+
+.chart-tip {
+  position: fixed; z-index: 50; pointer-events: none;
+  background: var(--c-text); color: var(--c-surface);
+  padding: 6px var(--space-2); border-radius: var(--radius-sm);
+  font-size: 12px; box-shadow: var(--shadow-lg); white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) { .ring-value { transition: none; } }
 
 /* =========================================================
    8. Cards
@@ -389,7 +537,10 @@ button { cursor: pointer; }
         <span class="wordmark-name">UOB IT PMO</span>
         <span class="wordmark-sub">Project Kanban · internal demo / training tool</span>
       </div>
-      <button type="button" class="btn btn-light" id="add-task-btn" aria-haspopup="dialog">+ Add Task</button>
+      <div class="header-actions">
+        <button type="button" class="btn btn-outline-light" id="focus-btn" aria-haspopup="dialog">★ My focus</button>
+        <button type="button" class="btn btn-light" id="add-task-btn" aria-haspopup="dialog">+ Add Task</button>
+      </div>
     </div>
     <ul class="summary" id="summary" aria-label="Board summary"></ul>
   </header>
@@ -434,6 +585,27 @@ button { cursor: pointer; }
      Kanban board
      ========================================================= -->
 <main class="layout">
+  <!-- Portfolio overview: live completion ring + grouped status chart -->
+  <section class="insights" id="insights" aria-labelledby="insights-heading">
+    <div class="insights-head">
+      <h2 id="insights-heading">Portfolio overview</h2>
+      <p class="insights-scope" id="insights-scope"></p>
+      <div class="insights-controls">
+        <label for="chart-group">Group by</label>
+        <select id="chart-group">
+          <option value="project">Project</option>
+          <option value="category">Category</option>
+          <option value="assignee">Assignee</option>
+          <option value="priority">Priority</option>
+        </select>
+        <button type="button" class="mini-btn" id="chart-view-btn" aria-pressed="false">Table view</button>
+        <button type="button" class="mini-btn" id="insights-toggle" aria-expanded="true" aria-controls="insights-body">Hide</button>
+      </div>
+    </div>
+    <div class="insights-body" id="insights-body"></div>
+  </section>
+  <div class="chart-tip" id="chart-tip" role="tooltip" hidden></div>
+
   <section aria-labelledby="board-heading">
     <h2 id="board-heading" class="visually-hidden">Kanban board</h2>
     <div class="board" id="board"></div>
@@ -509,6 +681,53 @@ button { cursor: pointer; }
       </form>
 </dialog>
 
+<!-- =========================================================
+     "Today's focus" pop-up: most urgent tasks + visitor's overdue check
+     ========================================================= -->
+<dialog class="task-dialog focus-dialog" id="focus-dialog" aria-labelledby="focus-heading">
+  <div class="dialog-head">
+    <h2 id="focus-heading">★ Today's focus</h2>
+    <button type="button" class="icon-btn dialog-close" data-close-focus aria-label="Close">×</button>
+  </div>
+  <div class="focus-body">
+    <section class="focus-section" aria-labelledby="focus-top-heading">
+      <h3 id="focus-top-heading">Most urgent tasks on the board</h3>
+      <div id="focus-top"></div>
+    </section>
+    <section class="focus-section" aria-labelledby="focus-mine-heading">
+      <h3 id="focus-mine-heading">Is anything overdue on you?</h3>
+      <div class="visitor-row">
+        <label for="visitor-select">I am</label>
+        <select id="visitor-select"></select>
+      </div>
+      <div class="visitor-result" id="visitor-result" aria-live="polite"></div>
+    </section>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" data-close-focus>Go to the board</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- =========================================================
+     Support pop-up (opens once after SUPPORT_PROMPT_DELAY_MS on the page)
+     ========================================================= -->
+<dialog class="task-dialog help-dialog" id="help-dialog" aria-labelledby="help-heading">
+  <div class="dialog-head">
+    <h2 id="help-heading">Thanks for visiting the IT PMO portal</h2>
+    <button type="button" class="icon-btn dialog-close" data-close-help aria-label="Close">×</button>
+  </div>
+  <div class="help-body">
+    <p>If you need further assistance, call the IT support hotline:</p>
+    <a class="hotline" id="hotline-link" href="#">
+      <span class="hotline-icon" aria-hidden="true">☎</span>
+      <span><span class="hotline-label">IT support hotline</span><span class="hotline-number" id="hotline-number"></span></span>
+    </a>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" data-close-help>Got it</button>
+    </div>
+  </div>
+</dialog>
+
 <!-- Toast region: announced politely to screen readers -->
 <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="false"></div>
 
@@ -524,6 +743,13 @@ button { cursor: pointer; }
    ========================================================= */
 const FORMSUBMIT_ENDPOINT = "https://formsubmit.co/ajax/YOUR_EMAIL@example.com";
 const FORMSUBMIT_TIMEOUT_MS = 15000;
+
+// Support pop-up: shown once per page load after this long on the page
+const SUPPORT_HOTLINE = "12388888";
+const SUPPORT_PROMPT_DELAY_MS = 10000;
+// "Today's focus" pop-up: opens this long after page load
+const FOCUS_PROMPT_DELAY_MS = 1500;
+const FOCUS_TOP_N = 3;
 
 /* =========================================================
    Reference data
@@ -545,6 +771,16 @@ const CATEGORIES = [
 ];
 const PRIORITIES = ["Critical", "High", "Medium", "Low"];
 
+// Status colour code: CSS class slug per status; charts stack Done first so completion reads left to right
+const STATUS_SLUG = { "Backlog": "backlog", "In Progress": "progress", "Blocked": "blocked", "Done": "done" };
+const STACK_ORDER = ["Done", "In Progress", "Blocked", "Backlog"];
+const CHART_GROUPS = {
+  project:  { label: "project",  values: () => PROJECTS },
+  category: { label: "category", values: () => CATEGORIES },
+  priority: { label: "priority", values: () => PRIORITIES },
+  assignee: { label: "assignee", values: tasks => [...new Set(tasks.map(t => t.assignee))].sort((a, b) => a.localeCompare(b)) },
+};
+
 /* =========================================================
    State — single source of truth (memory only, no storage)
    ========================================================= */
@@ -553,7 +789,11 @@ const state = {
   filters: { search: "", project: "", assignee: "", priority: "", sort: "" },
   nextId: 1,
   // Transient UI state for per-card inline controls
-  ui: { moveMenuId: null, confirmDeleteId: null, expanded: new Set(), focus: null, submitting: false },
+  ui: {
+    moveMenuId: null, confirmDeleteId: null, expanded: new Set(), focus: null, submitting: false,
+    chartGroup: "project", chartTable: false, chartsOpen: true,
+    visitor: "", // assignee the visitor picked in the focus pop-up (page load only)
+  },
 };
 
 /* =========================================================
@@ -752,11 +992,11 @@ function renderSummary() {
   const overdue = state.tasks.filter(isOverdue).length;
   const items = [
     ["Total", state.tasks.length, ""],
-    ...STATUSES.map(s => [s, counts[s], ""]),
+    ...STATUSES.map(s => [s, counts[s], "", STATUS_SLUG[s]]),
     ["Overdue", overdue, "summary-overdue"],
   ];
-  document.getElementById("summary").innerHTML = items.map(([label, n, cls]) =>
-    `<li class="${cls}"><strong>${n}</strong> ${escapeHtml(label)}</li>`
+  document.getElementById("summary").innerHTML = items.map(([label, n, cls, slug]) =>
+    `<li class="${cls}">${slug ? `<span class="dot dot-${slug}" aria-hidden="true"></span>` : ""}<strong>${n}</strong> ${escapeHtml(label)}</li>`
   ).join("");
 }
 
@@ -776,6 +1016,8 @@ function renderBoard() {
     : "";
 
   renderSummary();
+  renderCharts(visible);
+  renderFocus();
   restoreFocus();
 }
 
@@ -789,6 +1031,140 @@ function restoreFocus() {
     : `[data-action="${f.action}"]`;
   const el = document.querySelector(sel);
   if (el) el.focus();
+}
+
+/* =========================================================
+   Portfolio overview charts (rendered from state, like the board)
+   ========================================================= */
+function countByStatus(tasks) {
+  const counts = Object.fromEntries(STATUSES.map(s => [s, 0]));
+  tasks.forEach(t => { counts[t.status]++; });
+  return counts;
+}
+function pctOf(n, total) { return total ? Math.round((n / total) * 100) : 0; }
+
+function renderCompletion(tasks) {
+  const counts = countByStatus(tasks);
+  const total = tasks.length;
+  const pct = pctOf(counts.Done, total);
+  const r = 60, circ = 2 * Math.PI * r;
+  const legend = STACK_ORDER.map(s => `
+      <li><span class="dot dot-${STATUS_SLUG[s]}" aria-hidden="true"></span><span>${escapeHtml(s)}</span>
+        <span class="n">${counts[s]}</span><span class="p">${pctOf(counts[s], total)}%</span></li>`).join("");
+  return `
+    <div class="completion">
+      <div class="ring" role="img" aria-label="${pct}% complete: ${counts.Done} of ${total} tasks done">
+        <svg viewBox="0 0 148 148" aria-hidden="true">
+          <circle class="ring-track" cx="74" cy="74" r="${r}"></circle>
+          ${counts.Done ? `<circle class="ring-value" cx="74" cy="74" r="${r}" stroke-dasharray="${(circ * pct / 100).toFixed(1)} ${circ.toFixed(1)}"></circle>` : ""}
+        </svg>
+        <div class="ring-label" aria-hidden="true">
+          <span class="ring-pct">${pct}%</span>
+          <span class="ring-sub">${counts.Done} of ${total} done</span>
+        </div>
+      </div>
+      <ul class="legend" aria-label="Tasks by status">${legend}</ul>
+    </div>`;
+}
+
+function groupTasks(tasks, groupKey) {
+  const cfg = CHART_GROUPS[groupKey];
+  return cfg.values(tasks).map(name => {
+    const items = tasks.filter(t => t[groupKey] === name);
+    return { name, total: items.length, counts: countByStatus(items) };
+  });
+}
+
+function renderGroupBars(groups, groupKey) {
+  const max = Math.max(1, ...groups.map(g => g.total));
+  const rows = groups.map(g => {
+    const segs = STACK_ORDER.filter(s => g.counts[s]).map(s =>
+      `<span class="seg seg-${STATUS_SLUG[s]}" style="--n:${g.counts[s]}"
+        data-tip="${escapeHtml(`${g.name} · ${s}: ${g.counts[s]} of ${g.total} (${pctOf(g.counts[s], g.total)}%)`)}"></span>`
+    ).join("");
+    const done = pctOf(g.counts.Done, g.total);
+    return `
+      <div class="bar-row">
+        <span class="bar-label" title="${escapeHtml(g.name)}">${escapeHtml(g.name)}</span>
+        <div class="bar-track" aria-hidden="true"><div class="bar" style="width:${(g.total / max) * 100}%">${segs}</div></div>
+        <span class="bar-value"><strong>${g.total}</strong> task${g.total === 1 ? "" : "s"} · ${done}%<span class="mini-progress" aria-hidden="true"><i style="width:${done}%"></i></span></span>
+      </div>`;
+  }).join("");
+  return `
+    <div class="bars" role="img" aria-label="Task count by ${escapeHtml(CHART_GROUPS[groupKey].label)}, split by status. Use Table view for exact numbers.">
+      <p class="bars-caption">Tasks by ${escapeHtml(CHART_GROUPS[groupKey].label)}, stacked by status · % = share done · hover a segment for detail</p>
+      ${rows || `<p class="bars-caption">No tasks to chart.</p>`}
+    </div>`;
+}
+
+function renderGroupTable(groups, groupKey, tasks) {
+  const all = countByStatus(tasks);
+  const cells = counts => STACK_ORDER.map(s => `<td>${counts[s]}</td>`).join("");
+  const body = groups.map(g => `
+      <tr><td>${escapeHtml(g.name)}</td>${cells(g.counts)}<td>${g.total}</td><td>${pctOf(g.counts.Done, g.total)}%</td></tr>`).join("");
+  return `
+    <div class="chart-table-wrap">
+      <table class="chart-table">
+        <caption class="visually-hidden">Task count by ${escapeHtml(CHART_GROUPS[groupKey].label)} and status</caption>
+        <thead><tr><th scope="col">${escapeHtml(CHART_GROUPS[groupKey].label[0].toUpperCase() + CHART_GROUPS[groupKey].label.slice(1))}</th>
+          ${STACK_ORDER.map(s => `<th scope="col"><span class="dot dot-${STATUS_SLUG[s]}" aria-hidden="true"></span> ${escapeHtml(s)}</th>`).join("")}
+          <th scope="col">Total</th><th scope="col">% done</th></tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot><tr><td>All</td>${cells(all)}<td>${tasks.length}</td><td>${pctOf(all.Done, tasks.length)}%</td></tr></tfoot>
+      </table>
+    </div>`;
+}
+
+function renderCharts(tasks) {
+  const { chartGroup, chartTable, chartsOpen } = state.ui;
+  document.getElementById("insights-scope").textContent = hasActiveFilters()
+    ? `Filtered view · ${tasks.length} of ${state.tasks.length} tasks`
+    : `All ${tasks.length} tasks · updates live as cards move`;
+  const body = document.getElementById("insights-body");
+  body.hidden = !chartsOpen;
+  if (!chartsOpen) return;
+  const groups = groupTasks(tasks, chartGroup);
+  body.innerHTML = renderCompletion(tasks) +
+    (chartTable ? renderGroupTable(groups, chartGroup, tasks) : renderGroupBars(groups, chartGroup));
+}
+
+function initCharts() {
+  const group = document.getElementById("chart-group");
+  const viewBtn = document.getElementById("chart-view-btn");
+  const toggle = document.getElementById("insights-toggle");
+  const tip = document.getElementById("chart-tip");
+  const body = document.getElementById("insights-body");
+
+  group.addEventListener("change", () => { state.ui.chartGroup = group.value; renderBoard(); });
+  viewBtn.addEventListener("click", () => {
+    state.ui.chartTable = !state.ui.chartTable;
+    viewBtn.setAttribute("aria-pressed", String(state.ui.chartTable));
+    viewBtn.textContent = state.ui.chartTable ? "Chart view" : "Table view";
+    renderBoard();
+  });
+  toggle.addEventListener("click", () => {
+    state.ui.chartsOpen = !state.ui.chartsOpen;
+    toggle.setAttribute("aria-expanded", String(state.ui.chartsOpen));
+    toggle.textContent = state.ui.chartsOpen ? "Hide" : "Show";
+    renderBoard();
+  });
+
+  // Hover tooltip for bar segments
+  body.addEventListener("mouseover", e => {
+    const seg = e.target.closest("[data-tip]");
+    if (!seg) return;
+    tip.textContent = seg.dataset.tip;
+    tip.hidden = false;
+  });
+  body.addEventListener("mousemove", e => {
+    if (tip.hidden) return;
+    const x = Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 8);
+    tip.style.left = `${Math.max(8, x)}px`;
+    tip.style.top = `${e.clientY - tip.offsetHeight - 10}px`;
+  });
+  body.addEventListener("mouseout", e => {
+    if (e.target.closest("[data-tip]") && !e.relatedTarget?.closest?.("[data-tip]")) tip.hidden = true;
+  });
 }
 
 /* =========================================================
@@ -1159,11 +1535,150 @@ function trackTopbarHeight() {
   else window.addEventListener("resize", update);
 }
 
+/* =========================================================
+   "Today's focus" pop-up
+   Ranks open tasks: overdue first, then priority, then soonest due.
+   Visitors pick who they are (no sign-in) to see their own overdue tasks.
+   ========================================================= */
+function rankOpenTasks(tasks) {
+  return tasks
+    .filter(t => t.status !== "Done")
+    .sort((a, b) =>
+      Number(isOverdue(b)) - Number(isOverdue(a)) ||
+      PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] ||
+      a.dueDate.localeCompare(b.dueDate));
+}
+
+function focusReason(t) {
+  if (isOverdue(t)) return `Overdue since ${formatDate(t.dueDate)}`;
+  if (t.status === "Blocked") return `Blocked · due ${formatDate(t.dueDate)}`;
+  return `Due ${formatDate(t.dueDate)}`;
+}
+
+function renderFocusItem(t) {
+  const id = escapeHtml(t.id);
+  return `
+    <li class="focus-item" data-priority="${escapeHtml(t.priority)}">
+      <div>
+        <div class="focus-meta">
+          <span class="card-id">${id}</span>
+          <span class="pill pill-${escapeHtml(t.priority)}">${escapeHtml(t.priority)}<span class="visually-hidden"> priority</span></span>
+          <span><span class="dot dot-${STATUS_SLUG[t.status]}" aria-hidden="true"></span> ${escapeHtml(t.status)}</span>
+          <span>· ${escapeHtml(t.assignee)}</span>
+        </div>
+        <p class="focus-title">${escapeHtml(t.title)}</p>
+        <span class="focus-why">${isOverdue(t) ? "⚠ " : ""}${escapeHtml(focusReason(t))}</span>
+      </div>
+      <button type="button" class="mini-btn" data-show-task="${id}" aria-label="Show ${id} on the board">Show ▸</button>
+    </li>`;
+}
+
+function renderFocus() {
+  const dialog = document.getElementById("focus-dialog");
+  if (!dialog.open) return;
+  const top = rankOpenTasks(state.tasks).slice(0, FOCUS_TOP_N);
+  document.getElementById("focus-top").innerHTML = top.length
+    ? `<ol class="focus-list">${top.map(renderFocusItem).join("")}</ol>`
+    : `<p class="visitor-verdict is-good">Every task is done. Nothing needs attention.</p>`;
+
+  // Visitor picker: assignees on the board right now
+  const select = document.getElementById("visitor-select");
+  const names = [...new Set(state.tasks.map(t => t.assignee))].sort((a, b) => a.localeCompare(b));
+  if (state.ui.visitor && !names.includes(state.ui.visitor)) state.ui.visitor = "";
+  select.innerHTML = optionsHtml(names, state.ui.visitor, "Choose your name…");
+
+  const result = document.getElementById("visitor-result");
+  const me = state.ui.visitor;
+  if (!me) { result.innerHTML = ""; return; }
+  const mine = state.tasks.filter(t => t.assignee === me);
+  const overdue = rankOpenTasks(mine).filter(isOverdue);
+  const open = mine.filter(t => t.status !== "Done").length;
+  result.innerHTML = overdue.length
+    ? `<p class="visitor-verdict is-bad">⚠ Yes — ${overdue.length} overdue task${overdue.length === 1 ? "" : "s"} assigned to ${escapeHtml(me)}.</p>
+       <ol class="focus-list">${overdue.map(renderFocusItem).join("")}</ol>`
+    : `<p class="visitor-verdict is-good">✓ No — nothing overdue for ${escapeHtml(me)}. ${open} open task${open === 1 ? "" : "s"} on track.</p>`;
+  result.innerHTML += `<div><button type="button" class="mini-btn" data-my-tasks>Show only my tasks on the board</button></div>`;
+}
+
+function openFocusDialog() {
+  const dialog = document.getElementById("focus-dialog");
+  if (!dialog.open) dialog.showModal();
+  renderFocus();
+}
+
+// Close the pop-up, then scroll to and highlight a card on the board
+function showTaskOnBoard(id) {
+  document.getElementById("focus-dialog").close();
+  let card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+  if (!card) {
+    document.getElementById("filter-form").reset(); // card hidden by filters
+    state.filters = { search: "", project: "", assignee: "", priority: "", sort: state.filters.sort };
+    renderBoard();
+    card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+  }
+  if (!card) return;
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+  card.classList.add("is-highlight");
+  setTimeout(() => card.classList.remove("is-highlight"), 2500);
+  card.querySelector('[data-action="details-toggle"]')?.focus({ preventScroll: true });
+}
+
+function initFocusPrompt() {
+  const dialog = document.getElementById("focus-dialog");
+  document.getElementById("focus-btn").addEventListener("click", openFocusDialog);
+  dialog.querySelectorAll("[data-close-focus]").forEach(btn => btn.addEventListener("click", () => dialog.close()));
+  dialog.addEventListener("click", e => {
+    if (e.target === dialog) { dialog.close(); return; }
+    const show = e.target.closest("[data-show-task]");
+    if (show) showTaskOnBoard(show.dataset.showTask);
+    if (e.target.closest("[data-my-tasks]")) {
+      dialog.close();
+      const input = document.getElementById("filter-assignee");
+      input.value = state.ui.visitor;
+      input.dispatchEvent(new Event("input"));
+      showToast(`Showing tasks for ${state.ui.visitor}`, "info");
+    }
+  });
+  document.getElementById("visitor-select").addEventListener("change", e => {
+    state.ui.visitor = e.target.value;
+    renderFocus();
+  });
+  setTimeout(() => { if (!document.querySelector("dialog[open]")) openFocusDialog(); }, FOCUS_PROMPT_DELAY_MS);
+}
+
+/* =========================================================
+   Support pop-up: once per page load, after the visitor has
+   spent SUPPORT_PROMPT_DELAY_MS on the page (tab visible)
+   ========================================================= */
+function initSupportPrompt() {
+  const dialog = document.getElementById("help-dialog");
+  document.getElementById("hotline-number").textContent = SUPPORT_HOTLINE;
+  document.getElementById("hotline-link").href = `tel:${SUPPORT_HOTLINE}`;
+  dialog.querySelectorAll("[data-close-help]").forEach(btn => btn.addEventListener("click", () => dialog.close()));
+  dialog.addEventListener("click", e => { if (e.target === dialog) dialog.close(); });
+
+  let visibleMs = 0;
+  let last = Date.now();
+  const timer = setInterval(() => {
+    const now = Date.now();
+    if (!document.hidden) visibleMs += now - last;
+    last = now;
+    // Don't stack on top of another pop-up (Add Task, Today's focus); wait until it closes
+    if (visibleMs >= SUPPORT_PROMPT_DELAY_MS && !document.querySelector("dialog[open]")) {
+      clearInterval(timer);
+      dialog.showModal();
+    }
+  }, 500);
+}
+
 function init() {
   seedTasks();
   initForm();
   initFilters();
+  initCharts();
   trackTopbarHeight();
+  initFocusPrompt();
+  initSupportPrompt();
   const board = document.getElementById("board");
   board.addEventListener("click", handleBoardClick);
   board.addEventListener("keydown", handleBoardKeydown);
